@@ -1,0 +1,10 @@
+swagger: '2.0'
+info:
+  description: 'Serverless Auth API'
+  version: '1.0.0'
+  title: 'Serverless Auth'
+host: '8begk8f50f.execute-api.us-east-1.amazonaws.com'
+basePath: '/dev'
+schemes:
+  - 'https'
+  - 'http'

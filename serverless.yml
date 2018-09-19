@@ -1,0 +1,29 @@
+plugins:
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, 'dev'}
+  serverless-offline:
+    babelOptions:
+      presets: ['es2015']
+
+service: serverless-template
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+  stage: ${self:custom.stage}
+  vpc: ${file(./serverless.env.yml):${self:custom.stage}.VPC}
+  environment:
+    STAGE: ${self:custom.stage}
+    REGION: ${file(./serverless.env.yml):${self:custom.stage}.REGION}
+
+functions:
+  exampleFn:
+    handler: bin/lambda/handler.exampleHttp
+    events:
+      - http:
+          path: users/test
+          method: post
+          cors: true

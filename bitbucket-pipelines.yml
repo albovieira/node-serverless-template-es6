@@ -1,0 +1,58 @@
+image:
+  name: maxmilhas/code-deploy:node8
+  username: $DOCKER_USER
+  password: $DOCKER_PWD
+
+pipelines:
+  branches:
+    develop:
+      - step:
+          name: Publishes swagger to Confluence
+          artifacts:
+            - docs/swagger.yml
+          image:
+            name: maxmilhas/code-deploy:swagger
+            username: $DOCKER_USER
+            password: $DOCKER_PWD
+          script:
+            - swagger ./docs/swagger.yml
+    script:
+      - step:
+          name: Build to homologation
+          caches:
+            - node
+          artifacts:
+            - node_modules/**
+            - bin/**
+          script:
+            - npm install
+            - npm run build
+            - npm prune --production
+      - step:
+          name: Deploy to homologation
+          script:
+            - export AWS_ACCESS_KEY_ID=$HMG_AWS_ACCESS_KEY_ID
+            - export AWS_SECRET_ACCESS_KEY=$HMG_AWS_SECRET_ACCESS_KEY
+            - export AWS_DEFAULT_REGION=$HMG_AWS_DEFAULT_REGION
+            - serverless deploy --verbose --force --stage=hmg
+
+    master:
+      - step:
+          name: Build to production
+          caches:
+            - node
+          artifacts:
+            - node_modules/**
+            - bin/**
+          script:
+            - npm install
+            - npm run build
+            - npm prune --production
+      - step:
+          name: Deploy to production
+          script:
+            - export AWS_ACCESS_KEY_ID=$PRD_AWS_ACCESS_KEY_ID
+            - export AWS_SECRET_ACCESS_KEY=$PRD_AWS_SECRET_ACCESS_KEY
+            - export AWS_DEFAULT_REGION=$PRD_AWS_DEFAULT_REGION
+            - serverless deploy --verbose --force --stage=prd
+            - curl https://s3.amazonaws.com/maxmilhas/shell/notify.sh | bash -
